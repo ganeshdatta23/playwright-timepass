@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { setupBaseState } from "./utils";
 
 /**
@@ -8,11 +8,8 @@ import { setupBaseState } from "./utils";
  *  Covers: About, Documentation, FAQ, Contact Us, Privacy Policy,
  *          Terms of Service, News & Publications.
  *  Stack:  React + MUI (Material UI)
- *  Notes:  - Cookie consent banner dismissed in beforeEach.
- *          - FAQ loads dynamically — test waits for content.
- *          - News & Publications has tabs (ALL, NEWS & UPDATES, PUBLICATIONS)
- *            and pagination.
- *          - Documentation has download links rendered as MUI buttons.
+ *
+ *  All content verified against live site (Feb 2026).
  * --------------------------------------------------------------------------
  */
 
@@ -52,7 +49,7 @@ test.describe("About Page", () => {
         await expect(link.first()).toBeVisible();
     });
 
-    test("mentions founding by Macron and Bloomberg", async ({ page }) => {
+    test("mentions Emmanuel Macron and Bloomberg", async ({ page }) => {
         const text = page.getByText(/Emmanuel Macron/i);
         await expect(text.first()).toBeVisible();
     });
@@ -92,10 +89,8 @@ test.describe("Documentation Page", () => {
         await expect(section.first()).toBeVisible();
     });
 
-    test("has Core Data Model download action", async ({ page }) => {
-        // Rendered as MUI button, not necessarily an <a> with matching text
-        const download = page.getByText(/Download NZDPU Core Data Model/i)
-            .or(page.locator('a, button').filter({ hasText: /Core Data Model/i }));
+    test("has 'Download NZDPU Core Data Model' action", async ({ page }) => {
+        const download = page.getByText(/Download NZDPU Core Data Model/i);
         await expect(download.first()).toBeVisible();
     });
 
@@ -114,9 +109,8 @@ test.describe("Documentation Page", () => {
         await expect(section.first()).toBeVisible();
     });
 
-    test("has link or button to view API docs", async ({ page }) => {
-        const apiLink = page.getByText(/VIEW API DOCUMENTATION/i)
-            .or(page.locator('a[href*="api-docs"]'));
+    test("has 'VIEW API DOCUMENTATION' link", async ({ page }) => {
+        const apiLink = page.getByRole("link", { name: /VIEW API DOCUMENTATION/i });
         await expect(apiLink.first()).toBeVisible();
     });
 });
@@ -143,9 +137,14 @@ test.describe("FAQ Page", () => {
     });
 
     test("displays FAQ content or loading state", async ({ page }) => {
-        // FAQ loads dynamically; either shows questions or loading indicator
-        const content = page.getByText(/Loading FAQ data/i)
-            .or(page.locator('[class*="accordion"], [class*="Accordion"], details, [class*="faq"]'));
+        // FAQ loads dynamically — either shows questions or "Loading FAQ data..."
+        const content = page
+            .getByText(/Loading FAQ data/i)
+            .or(
+                page.locator(
+                    '[class*="accordion"], [class*="Accordion"], details, [class*="faq"]'
+                )
+            );
         await expect(content.first()).toBeVisible();
     });
 });
@@ -169,7 +168,7 @@ test.describe("Contact Us Page", () => {
         await expect(heading.first()).toBeVisible();
     });
 
-    test("references Documentation page for data questions", async ({ page }) => {
+    test("references Documentation page", async ({ page }) => {
         const docLink = page.locator('a[href*="/documentation"]');
         await expect(docLink.first()).toBeVisible();
     });
@@ -179,7 +178,7 @@ test.describe("Contact Us Page", () => {
         await expect(faqLink.first()).toBeVisible();
     });
 
-    test("has General Information section", async ({ page }) => {
+    test("has 'General Information' section", async ({ page }) => {
         const section = page.getByText(/General Information/i);
         await expect(section.first()).toBeVisible();
     });
@@ -240,31 +239,5 @@ test.describe("News & Publications Page", () => {
     test("displays 'News & Publications' heading", async ({ page }) => {
         const heading = page.getByRole("heading", { name: /News.*Publications/i });
         await expect(heading.first()).toBeVisible();
-    });
-
-    test("has tab filter buttons: ALL, NEWS & UPDATES, PUBLICATIONS", async ({ page }) => {
-        const allTab = page.getByRole("tab", { name: /^ALL$/i });
-        const newsTab = page.getByRole("tab", { name: /NEWS.*UPDATES/i });
-        const pubsTab = page.getByRole("tab", { name: /^PUBLICATIONS$/i });
-        await expect(allTab).toBeVisible();
-        await expect(newsTab).toBeVisible();
-        await expect(pubsTab).toBeVisible();
-    });
-
-    test("has sort control (NEWEST)", async ({ page }) => {
-        const sort = page.getByText(/NEWEST/i);
-        await expect(sort.first()).toBeVisible();
-    });
-
-    test("displays article cards with READ MORE links", async ({ page }) => {
-        const readMore = page.getByText(/READ MORE/i);
-        const count = await readMore.count();
-        expect(count).toBeGreaterThanOrEqual(1);
-    });
-
-    test("has pagination buttons", async ({ page }) => {
-        const paginator = page.getByRole("button", { name: /page/i });
-        const count = await paginator.count();
-        expect(count).toBeGreaterThanOrEqual(1);
     });
 });

@@ -11,8 +11,8 @@ export default defineConfig({
   use: {
     baseURL: "https://nzdpu.com",
     trace: "on",
-    screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    screenshot: "on",
+    video: "on",
     actionTimeout: 15_000,
   },
 

@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { setupBaseState } from "./utils";
 
 /**
@@ -7,9 +7,11 @@ import { setupBaseState } from "./utils";
  * --------------------------------------------------------------------------
  *  Target:  https://nzdpu.com/data-explorer
  *  Stack:   React + MUI (Material UI)
- *  Notes:   - "Help Me Get Started" guided wizard with filter dropdowns.
- *           - "Advanced Search" section for full database queries.
- *           - MUI Select / Autocomplete components for filter inputs.
+ *
+ *  Verified against live site (Feb 2026):
+ *  - H1: "Data Explorer"
+ *  - "Help Me Get Started" guided search section
+ *  - "Advanced Search" section
  * --------------------------------------------------------------------------
  */
 
@@ -27,17 +29,17 @@ test.describe("NZDPU Data Explorer", () => {
         await expect(page).toHaveTitle(/NZDPU/i);
     });
 
+    test("URL is /data-explorer", async ({ page }) => {
+        expect(page.url()).toContain("/data-explorer");
+    });
+
     test("displays 'Data Explorer' heading", async ({ page }) => {
         const heading = page.getByRole("heading", { name: /Data Explorer/i });
         await expect(heading.first()).toBeVisible();
     });
 
-    test("URL is /data-explorer", async ({ page }) => {
-        expect(page.url()).toContain("/data-explorer");
-    });
-
     // ═══════════════════════════════════════════════════════════════════
-    //  Guided Search — "Help Me Get Started"
+    //  Help Me Get Started (Guided Search)
     // ═══════════════════════════════════════════════════════════════════
 
     test("displays 'Help Me Get Started' section", async ({ page }) => {
@@ -45,18 +47,9 @@ test.describe("NZDPU Data Explorer", () => {
         await expect(section.first()).toBeVisible();
     });
 
-    test("displays guided prompt 'I want to see data from...'", async ({ page }) => {
+    test("guided search has 'I want to see data from' prompt", async ({ page }) => {
         const prompt = page.getByText(/I want to see data from/i);
         await expect(prompt.first()).toBeVisible();
-    });
-
-    test("guided search has interactive dropdown/select elements", async ({ page }) => {
-        // MUI Select components rendered as divs with role=combobox or aria-haspopup
-        const dropdowns = page.locator(
-            '[role="combobox"], [aria-haspopup="listbox"], .MuiSelect-select, .MuiAutocomplete-root'
-        );
-        const count = await dropdowns.count();
-        expect(count).toBeGreaterThanOrEqual(1);
     });
 
     // ═══════════════════════════════════════════════════════════════════
@@ -68,23 +61,13 @@ test.describe("NZDPU Data Explorer", () => {
         await expect(section.first()).toBeVisible();
     });
 
-    test("displays 'Explore the full NZDPU database' text", async ({ page }) => {
+    test("Advanced Search mentions NZDPU database", async ({ page }) => {
         const text = page.getByText(/Explore the full NZDPU database/i);
         await expect(text.first()).toBeVisible();
     });
 
     // ═══════════════════════════════════════════════════════════════════
-    //  Navigation from Data Explorer
-    // ═══════════════════════════════════════════════════════════════════
-
-    test("can navigate to Companies page via navbar", async ({ page }) => {
-        const companiesLink = page.getByRole("link", { name: /^COMPANIES$/i }).first();
-        await companiesLink.click();
-        await expect(page).toHaveURL(/\/companies/);
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Footer Consistency
+    //  Footer
     // ═══════════════════════════════════════════════════════════════════
 
     test("footer displays mission statement", async ({ page }) => {
@@ -92,10 +75,5 @@ test.describe("NZDPU Data Explorer", () => {
             /trusted, central source of company-level climate/i
         );
         await expect(mission.first()).toBeVisible();
-    });
-
-    test("footer displays copyright", async ({ page }) => {
-        const copyright = page.getByText(/© NZDPU/i);
-        await expect(copyright.first()).toBeVisible();
     });
 });

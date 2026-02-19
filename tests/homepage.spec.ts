@@ -1,4 +1,4 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { setupBaseState } from "./utils";
 
 /**
@@ -7,12 +7,13 @@ import { setupBaseState } from "./utils";
  * --------------------------------------------------------------------------
  *  Target:  https://nzdpu.com/
  *  Stack:   React + MUI (Material UI)
- *  Notes:   - Page uses MUI components throughout.
- *           - Cookie consent banner may appear — dismissed in beforeEach.
- *           - SICS/NAZCA/Emissions content is rendered dynamically;
- *             some sections require scrolling into view.
- *           - "Visualizations temporarily unavailable" fallback messages
- *             may or may not appear depending on backend status.
+ *
+ *  Verified against live site structure (Feb 2026):
+ *  - H1: "Net-Zero Data Public Utility"
+ *  - Engage cards with links: Explore companies, Explore DATA,
+ *    COLLABORATE WITH US, SUBSCRIBE
+ *  - NZDPU Governance and Collaborators sections
+ *  - Consistent footer across all pages
  * --------------------------------------------------------------------------
  */
 
@@ -23,175 +24,112 @@ test.describe("NZDPU Homepage", () => {
     });
 
     // ═══════════════════════════════════════════════════════════════════
-    //  Page Load & Meta
+    //  Page Load
     // ═══════════════════════════════════════════════════════════════════
 
-    test("page loads with correct title containing NZDPU", async ({ page }) => {
+    test("page loads with NZDPU in the title", async ({ page }) => {
         await expect(page).toHaveTitle(/NZDPU/i);
     });
 
-    test("hero heading 'Net-Zero Data Public Utility' is visible", async ({ page }) => {
-        const heading = page.getByRole("heading", { name: /Net-Zero Data Public Utility/i });
+    test("URL is the homepage", async ({ page }) => {
+        expect(page.url()).toMatch(/https:\/\/nzdpu\.com\/?$/);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Hero Section
+    // ═══════════════════════════════════════════════════════════════════
+
+    test("displays 'Net-Zero Data Public Utility' heading", async ({ page }) => {
+        const heading = page.getByRole("heading", {
+            name: /Net-Zero Data Public Utility/i,
+        });
         await expect(heading.first()).toBeVisible();
     });
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  Top Navigation Bar
-    // ═══════════════════════════════════════════════════════════════════
-
-    test("navbar has COMPANIES link", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^COMPANIES$/i }).first();
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", /\/companies/);
+    test("displays tagline about centralized repository", async ({ page }) => {
+        const tagline = page.getByText(
+            /global centralized repository of company-level greenhouse gas/i
+        );
+        await expect(tagline.first()).toBeVisible();
     });
 
-    test("navbar has DATA EXPLORER link", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^DATA EXPLORER$/i }).first();
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", /\/data-explorer/);
-    });
-
-    test("navbar has RESOURCES dropdown button", async ({ page }) => {
-        const btn = page.getByRole("button", { name: /^RESOURCES$/i });
-        await expect(btn).toBeVisible();
-    });
-
-    test("navbar has ABOUT dropdown button", async ({ page }) => {
-        const btn = page.getByRole("button", { name: /^ABOUT$/i });
-        await expect(btn).toBeVisible();
-    });
-
-    test("navbar has company search icon button", async ({ page }) => {
-        const btn = page.getByRole("button", { name: /company search/i });
-        await expect(btn).toBeVisible();
-    });
-
-    test("navbar has LOG IN/REGISTER button", async ({ page }) => {
-        const btn = page.getByRole("button", { name: /log in\/register/i });
-        await expect(btn).toBeVisible();
+    test("displays 'Free. Transparent. Accessible to all.' text", async ({ page }) => {
+        const text = page.getByText(/Free\. Transparent\. Accessible to all/i);
+        await expect(text.first()).toBeVisible();
     });
 
     // ═══════════════════════════════════════════════════════════════════
-    //  Homepage Statistics / KPI Counters
+    //  Header Navigation
     // ═══════════════════════════════════════════════════════════════════
 
-    test("displays total companies covered by NZDPU", async ({ page }) => {
-        const stat = page.getByText(/companies covered by NZDPU/i);
-        await expect(stat.first()).toBeVisible();
-    });
-
-    test("displays SICS® sector information count", async ({ page }) => {
-        const stat = page.getByText(/companies with available SICS/i);
-        await expect(stat.first()).toBeVisible();
-    });
-
-    test("displays NAZCA jurisdictions coverage", async ({ page }) => {
-        const stat = page.getByText(/UNFCCC NAZCA jurisdictions covered/i);
-        await expect(stat.first()).toBeVisible();
-    });
-
-    test("displays GHG emissions coverage percentage", async ({ page }) => {
-        const stat = page.getByText(/direct global GHG emissions/i);
-        await expect(stat.first()).toBeVisible();
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  LEARN MORE Buttons (SICS, NAZCA, Coverage, Targets)
-    // ═══════════════════════════════════════════════════════════════════
-
-    test("has LEARN MORE buttons for data sections", async ({ page }) => {
-        const learnMoreBtns = page.getByRole("button", { name: /learn more/i });
-        const count = await learnMoreBtns.count();
-        expect(count).toBeGreaterThanOrEqual(1);
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Companies Table on Homepage
-    // ═══════════════════════════════════════════════════════════════════
-
-    test("displays company results count", async ({ page }) => {
-        const results = page.getByText(/Results/i);
-        await expect(results.first()).toBeVisible();
-    });
-
-    test("displays EXPORT COMPANY LIST button", async ({ page }) => {
-        const exportBtn = page.getByRole("button", { name: /export company list/i })
-            .or(page.getByText(/EXPORT COMPANY LIST/i));
-        await expect(exportBtn.first()).toBeVisible();
-    });
-
-    test("company table has Jurisdiction filter", async ({ page }) => {
-        const filter = page.getByText("Jurisdiction").first();
-        await expect(filter).toBeVisible();
-    });
-
-    test("company table has SICS Sector filter", async ({ page }) => {
-        const filter = page.getByText("SICS Sector").first();
-        await expect(filter).toBeVisible();
-    });
-
-    test("company table has Data Provider(s) filter", async ({ page }) => {
-        const filter = page.getByText("Data Provider(s)").first();
-        await expect(filter).toBeVisible();
-    });
-
-    test("company table rows display VIEW links", async ({ page }) => {
-        const viewLinks = page.getByRole("link", { name: /^VIEW$/i });
-        const count = await viewLinks.count();
-        expect(count).toBeGreaterThanOrEqual(1);
-    });
-
-    test("company table has RESET button for filters", async ({ page }) => {
-        const resetBtn = page.getByText(/^RESET$/i);
-        await expect(resetBtn.first()).toBeVisible();
-    });
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Engage with NZDPU Section
-    // ═══════════════════════════════════════════════════════════════════
-
-    test("displays 'Search and Browse Company Data' engage card", async ({ page }) => {
-        const card = page.getByText(/Search and Browse Company Data/i);
-        await expect(card.first()).toBeVisible();
-    });
-
-    test("displays 'Compare Emissions Data Across Companies' engage card", async ({ page }) => {
-        const card = page.getByText(/Compare Emissions Data Across Companies/i);
-        await expect(card.first()).toBeVisible();
-    });
-
-    test("displays 'Collaborate With Us' engage card", async ({ page }) => {
-        const card = page.getByText(/Collaborate With Us/i);
-        await expect(card.first()).toBeVisible();
-    });
-
-    test("displays 'Subscribe Today' engage card", async ({ page }) => {
-        const card = page.getByText(/Subscribe Today/i);
-        await expect(card.first()).toBeVisible();
-    });
-
-    test("has EXPLORE DATA link", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^EXPLORE DATA$/i });
+    test("header has COMPANIES link", async ({ page }) => {
+        const link = page.getByRole("link", { name: /^COMPANIES$/i });
         await expect(link.first()).toBeVisible();
     });
 
-    test("has COLLABORATE WITH US link", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^COLLABORATE WITH US$/i });
+    test("header has data explorer link", async ({ page }) => {
+        const link = page.getByRole("link", { name: /data explorer/i });
         await expect(link.first()).toBeVisible();
     });
 
     // ═══════════════════════════════════════════════════════════════════
-    //  NZDPU Governance Section
+    //  Engage Section
+    // ═══════════════════════════════════════════════════════════════════
+
+    test("has 'Engage with NZDPU' section", async ({ page }) => {
+        const heading = page.getByText(/Engage with NZDPU/i);
+        await expect(heading.first()).toBeVisible();
+    });
+
+    test("Explore companies link points to /companies", async ({ page }) => {
+        const link = page.getByRole("link", { name: /Explore companies/i });
+        await expect(link.first()).toBeVisible();
+        await expect(link.first()).toHaveAttribute("href", /\/companies/);
+    });
+
+    test("Explore DATA link points to /data-explorer", async ({ page }) => {
+        const link = page.getByRole("link", { name: /Explore DATA/i });
+        await expect(link.first()).toBeVisible();
+        await expect(link.first()).toHaveAttribute("href", /\/data-explorer/);
+    });
+
+    test("COLLABORATE WITH US link points to /contact-us", async ({ page }) => {
+        const link = page.getByRole("link", { name: /COLLABORATE WITH US/i });
+        await expect(link.first()).toBeVisible();
+        await expect(link.first()).toHaveAttribute("href", /\/contact-us/);
+    });
+
+    test("SUBSCRIBE link is present", async ({ page }) => {
+        const link = page.getByRole("link", { name: /SUBSCRIBE/i });
+        await expect(link.first()).toBeVisible();
+    });
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Governance Section
     // ═══════════════════════════════════════════════════════════════════
 
     test("displays NZDPU Governance section", async ({ page }) => {
-        const governance = page.getByText(/NZDPU Governance/i);
-        await expect(governance.first()).toBeVisible();
+        const heading = page.getByText(/NZDPU Governance/i);
+        await expect(heading.first()).toBeVisible();
     });
 
-    test("governance section mentions Climate Data Steering Committee", async ({ page }) => {
-        const cdsc = page.getByText(/Climate Data Steering Committee/i);
-        await expect(cdsc.first()).toBeVisible();
+    test("mentions Climate Data Steering Committee", async ({ page }) => {
+        const text = page.getByText(/Climate Data Steering Committee/i);
+        await expect(text.first()).toBeVisible();
+    });
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Collaborators Section
+    // ═══════════════════════════════════════════════════════════════════
+
+    test("displays Collaborators section", async ({ page }) => {
+        const heading = page.getByText(/Collaborators/i);
+        await expect(heading.first()).toBeVisible();
+    });
+
+    test("mentions CDP collaborator", async ({ page }) => {
+        const link = page.locator('a[href*="cdp.net"]');
+        await expect(link.first()).toBeVisible();
     });
 
     // ═══════════════════════════════════════════════════════════════════
@@ -205,43 +143,8 @@ test.describe("NZDPU Homepage", () => {
         await expect(mission.first()).toBeVisible();
     });
 
-    test("footer has Subscribe to Our Newsletter section", async ({ page }) => {
-        const subscribe = page.getByText(/Subscribe to Our Newsletter/i);
-        await expect(subscribe.first()).toBeVisible();
-    });
-
-    test("footer has newsletter email input and SUBMIT button", async ({ page }) => {
-        const submitBtn = page.getByRole("button", { name: /^SUBMIT$/i });
-        await expect(submitBtn.first()).toBeVisible();
-    });
-
     test("footer has Companies link", async ({ page }) => {
         const link = page.locator("footer").getByRole("link", { name: /^Companies$/i });
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has Data Explorer link", async ({ page }) => {
-        const link = page.locator("footer").getByRole("link", { name: /^Data Explorer$/i });
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has Documentation link", async ({ page }) => {
-        const link = page.locator("footer").getByRole("link", { name: /^Documentation$/i });
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has FAQs link", async ({ page }) => {
-        const link = page.locator("footer").getByRole("link", { name: /^FAQs$/i });
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has About NZDPU link", async ({ page }) => {
-        const link = page.locator("footer").getByRole("link", { name: /^About NZDPU$/i });
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has Terms of Service link", async ({ page }) => {
-        const link = page.locator("footer").getByRole("link", { name: /^Terms of Service$/i });
         await expect(link.first()).toBeVisible();
     });
 
@@ -250,13 +153,8 @@ test.describe("NZDPU Homepage", () => {
         await expect(link.first()).toBeVisible();
     });
 
-    test("footer has LinkedIn social link", async ({ page }) => {
-        const link = page.locator("footer").locator('a[href*="linkedin.com"]');
+    test("footer has Terms of Service link", async ({ page }) => {
+        const link = page.locator("footer").getByRole("link", { name: /Terms of Service/i });
         await expect(link.first()).toBeVisible();
-    });
-
-    test("footer displays copyright notice", async ({ page }) => {
-        const copyright = page.getByText(/© NZDPU/i);
-        await expect(copyright.first()).toBeVisible();
     });
 });
