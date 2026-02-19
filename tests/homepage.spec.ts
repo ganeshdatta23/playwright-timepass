@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { dismissCookieBanner } from "./utils";
+import { setupBaseState } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -19,7 +19,7 @@ import { dismissCookieBanner } from "./utils";
 test.describe("NZDPU Homepage", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     // ═══════════════════════════════════════════════════════════════════

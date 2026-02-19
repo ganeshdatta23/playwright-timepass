@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { dismissCookieBanner } from "./utils";
+import { setupBaseState } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -23,7 +23,7 @@ import { dismissCookieBanner } from "./utils";
 test.describe("About Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/about", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -75,7 +75,7 @@ test.describe("About Page", () => {
 test.describe("Documentation Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/documentation", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -128,7 +128,7 @@ test.describe("Documentation Page", () => {
 test.describe("FAQ Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/faq", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -157,7 +157,7 @@ test.describe("FAQ Page", () => {
 test.describe("Contact Us Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/contact-us", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -192,7 +192,7 @@ test.describe("Contact Us Page", () => {
 test.describe("Privacy Policy Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/privacy-policy", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -211,7 +211,7 @@ test.describe("Privacy Policy Page", () => {
 test.describe("Terms of Service Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/terms-of-service", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {
@@ -230,7 +230,7 @@ test.describe("Terms of Service Page", () => {
 test.describe("News & Publications Page", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/news-and-publications", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("page loads with NZDPU in the title", async ({ page }) => {

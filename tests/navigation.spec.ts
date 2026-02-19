@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { dismissCookieBanner } from "./utils";
+import { setupBaseState } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -22,7 +22,7 @@ import { dismissCookieBanner } from "./utils";
 test.describe("Header Navigation", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("RESOURCES dropdown opens and shows links", async ({ page }) => {
@@ -62,7 +62,7 @@ test.describe("Header Navigation", () => {
 test.describe("Footer Navigation", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     const footerLinks = [
@@ -96,7 +96,7 @@ test.describe("Footer Navigation", () => {
 test.describe("Engage Section", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     test("EXPLORE DATA button navigates to /data-explorer", async ({ page }) => {
@@ -149,7 +149,7 @@ test.describe("Accessibility (WCAG 2.1 AA)", () => {
      * issues might exist that are not show-stoppers for E2E.
      */
     async function checkA11y(page: Page, contextName: string) {
-        await dismissCookieBanner(page); // clear overlays
+        await setupBaseState(page); // clear overlays
 
         const accessibilityScanResults = await new AxeBuilder({ page })
             .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

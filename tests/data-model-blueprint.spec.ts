@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { dismissCookieBanner } from "./utils";
+import { setupBaseState } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -17,7 +17,7 @@ import { dismissCookieBanner } from "./utils";
 test.describe("NZDPU Data Model Blueprint", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/data-model-blueprint", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
+        await setupBaseState(page);
     });
 
     // ═══════════════════════════════════════════════════════════════════
@@ -108,7 +108,7 @@ test.describe("NZDPU Data Model Blueprint", () => {
             "/data-model-blueprint/issb?schemaTab=GREENHOUSE_GASES&dataModel=issb&tab=emissions",
             { waitUntil: "networkidle" }
         );
-        await dismissCookieBanner(page); // Ensure no banner blocks view
+        await setupBaseState(page); // Ensure no banner blocks view
         const body = page.locator("body");
         await expect(body).not.toBeEmpty();
         // Should have some text content related to emissions
@@ -124,7 +124,7 @@ test.describe("NZDPU Data Model Blueprint", () => {
             "/data-model-blueprint/efrag?schemaTab=TOTAL_EMISSIONS&dataModel=efrag&tab=emissions",
             { waitUntil: "networkidle" }
         );
-        await dismissCookieBanner(page); // Ensure no banner blocks view
+        await setupBaseState(page); // Ensure no banner blocks view
         const body = page.locator("body");
         await expect(body).not.toBeEmpty();
         await expect(body).toContainText(/.+/);
