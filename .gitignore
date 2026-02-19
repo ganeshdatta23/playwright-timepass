@@ -1,0 +1,29 @@
+# ----- Node & Dependencies -----
+node_modules/
+
+# ----- Build Output -----
+dist/
+
+# ----- Playwright -----
+# Test results (screenshots, traces, videos)
+test-results/
+playwright-report/
+
+# ----- Inspector Utility -----
+inspector-screenshots/
+
+# ----- OS Files -----
+.DS_Store
+Thumbs.db
+
+# ----- IDE -----
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ----- Environment -----
+.env
+.env.local
