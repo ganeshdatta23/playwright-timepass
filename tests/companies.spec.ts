@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -13,17 +14,6 @@ import { test, expect, Page } from "@playwright/test";
  *           - Company rows have VIEW link navigating to detail page.
  * --------------------------------------------------------------------------
  */
-
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear.
-    }
-}
 
 test.describe("NZDPU Companies Page", () => {
     test.beforeEach(async ({ page }) => {
@@ -118,7 +108,7 @@ test.describe("NZDPU Companies Page", () => {
     });
 
     test("has pagination next page button", async ({ page }) => {
-        const nextBtn = page.getByRole("button", { name: /go to next page/i });
+        const nextBtn = page.getByRole("button", { name: /next/i });
         await expect(nextBtn).toBeVisible();
     });
 

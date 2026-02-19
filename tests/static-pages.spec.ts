@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -14,17 +15,6 @@ import { test, expect, Page } from "@playwright/test";
  *          - Documentation has download links rendered as MUI buttons.
  * --------------------------------------------------------------------------
  */
-
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear.
-    }
-}
 
 // ═════════════════════════════════════════════════════════════════════════
 //  About Page

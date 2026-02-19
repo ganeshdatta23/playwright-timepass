@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -14,18 +15,6 @@ import { test, expect, Page } from "@playwright/test";
  *             may or may not appear depending on backend status.
  * --------------------------------------------------------------------------
  */
-
-/** Dismiss the cookie consent banner if it appears. */
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear — that's fine.
-    }
-}
 
 test.describe("NZDPU Homepage", () => {
     test.beforeEach(async ({ page }) => {

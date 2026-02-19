@@ -10,9 +10,9 @@ export default defineConfig({
 
   use: {
     baseURL: "https://nzdpu.com",
-    trace: "on-first-retry",
+    trace: "on",
     screenshot: "only-on-failure",
-    video: "on-first-retry",
+    video: "retain-on-failure",
     actionTimeout: 15_000,
   },
 

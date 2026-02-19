@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -12,17 +13,6 @@ import { test, expect, Page } from "@playwright/test";
  *           - Sub-pages load schema via tabs (emissions, targets, etc.).
  * --------------------------------------------------------------------------
  */
-
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear.
-    }
-}
 
 test.describe("NZDPU Data Model Blueprint", () => {
     test.beforeEach(async ({ page }) => {
@@ -92,6 +82,8 @@ test.describe("NZDPU Data Model Blueprint", () => {
     });
 
     test("tapping View Data Model navigates to a sub-page", async ({ page }) => {
+        // Note: This test might be flaky if multiple "View Data Model" exist.
+        // We target the first one, which is usually ISSB.
         const viewModel = page.getByText(/View Data Model/i).first();
         await viewModel.click();
         await page.waitForURL(/data-model-blueprint\/(issb|efrag)/, { timeout: 10000 });
@@ -116,6 +108,7 @@ test.describe("NZDPU Data Model Blueprint", () => {
             "/data-model-blueprint/issb?schemaTab=GREENHOUSE_GASES&dataModel=issb&tab=emissions",
             { waitUntil: "networkidle" }
         );
+        await dismissCookieBanner(page); // Ensure no banner blocks view
         const body = page.locator("body");
         await expect(body).not.toBeEmpty();
         // Should have some text content related to emissions
@@ -131,6 +124,7 @@ test.describe("NZDPU Data Model Blueprint", () => {
             "/data-model-blueprint/efrag?schemaTab=TOTAL_EMISSIONS&dataModel=efrag&tab=emissions",
             { waitUntil: "networkidle" }
         );
+        await dismissCookieBanner(page); // Ensure no banner blocks view
         const body = page.locator("body");
         await expect(body).not.toBeEmpty();
         await expect(body).toContainText(/.+/);

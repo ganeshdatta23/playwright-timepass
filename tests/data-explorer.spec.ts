@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
@@ -11,17 +12,6 @@ import { test, expect, Page } from "@playwright/test";
  *           - MUI Select / Autocomplete components for filter inputs.
  * --------------------------------------------------------------------------
  */
-
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear.
-    }
-}
 
 test.describe("NZDPU Data Explorer", () => {
     test.beforeEach(async ({ page }) => {

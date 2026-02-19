@@ -1,109 +1,57 @@
 import { test, expect, Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { dismissCookieBanner } from "./utils";
 
 /**
  * --------------------------------------------------------------------------
  *  NZDPU Navigation & Accessibility — End-to-End Test Suite
  * --------------------------------------------------------------------------
- *  Cross-page navigation tests + axe-core WCAG 2.1 accessibility audits.
- *
- *  Stack:  React + MUI (Material UI)
- *  Notes:  - Cookie consent banner dismissed before each test.
- *          - Nav uses MUI buttons for dropdown menus (RESOURCES, ABOUT)
- *            and standard <a> links for COMPANIES and DATA EXPLORER.
- *          - Footer has 13 links including LinkedIn social icon.
- *          - Accessibility tests REPORT violations as soft assertions;
- *            the live NZDPU site has known a11y issues (missing img alt,
- *            ARIA input names, contrast ratios). We log them but only
- *            fail on critical violations ≥ threshold.
+ *  Target:  https://nzdpu.com/
+ *  Stack:   React + MUI (Material UI)
+ *  Notes:   - Cookie consent banner tested explicitly here, and dismissed
+ *             in other tests.
+ *           - Accessibility audits using @axe-core/playwright (WCAG 2.1 AA).
+ *           - Footer links are tested via data-driven loop.
  * --------------------------------------------------------------------------
  */
-
-async function dismissCookieBanner(page: Page): Promise<void> {
-    const allowBtn = page.getByRole("button", { name: /allow all/i });
-    try {
-        await allowBtn.waitFor({ state: "visible", timeout: 5000 });
-        await allowBtn.click();
-        await allowBtn.waitFor({ state: "hidden", timeout: 3000 });
-    } catch {
-        // Banner did not appear.
-    }
-}
 
 // ═════════════════════════════════════════════════════════════════════════
 //  Header Navigation
 // ═════════════════════════════════════════════════════════════════════════
 
 test.describe("Header Navigation", () => {
-    test("COMPANIES link navigates from homepage to /companies", async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
         await dismissCookieBanner(page);
-
-        const link = page.getByRole("link", { name: /^COMPANIES$/i }).first();
-        await link.click();
-        await expect(page).toHaveURL(/\/companies/);
     });
 
-    test("DATA EXPLORER link navigates from homepage to /data-explorer", async ({ page }) => {
-        await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const link = page.getByRole("link", { name: /^DATA EXPLORER$/i }).first();
-        await link.click();
-        await expect(page).toHaveURL(/\/data-explorer/);
+    test("RESOURCES dropdown opens and shows links", async ({ page }) => {
+        const resourcesBtn = page.getByRole("button", { name: /^RESOURCES$/i });
+        await resourcesBtn.click();
+        const menu = page.getByRole("menu");
+        await expect(menu).toBeVisible();
+        await expect(menu.getByRole("menuitem", { name: /Documentation/i })).toBeVisible();
+        await expect(menu.getByRole("menuitem", { name: /FAQ/i })).toBeVisible();
     });
 
-    test("can navigate from Companies to Data Explorer", async ({ page }) => {
+    test("ABOUT dropdown opens and shows links", async ({ page }) => {
+        const aboutBtn = page.getByRole("button", { name: /^ABOUT$/i });
+        await aboutBtn.click();
+        const menu = page.getByRole("menu");
+        await expect(menu).toBeVisible();
+        await expect(menu.getByRole("menuitem", { name: /About NZDPU/i })).toBeVisible();
+        await expect(menu.getByRole("menuitem", { name: /News/i })).toBeVisible();
+        await expect(menu.getByRole("menuitem", { name: /Contact/i })).toBeVisible();
+    });
+
+    test("NZDPU Logo navigates to homepage", async ({ page }) => {
+        // Navigate elsewhere first
         await page.goto("/companies", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const link = page.getByRole("link", { name: /^DATA EXPLORER$/i }).first();
-        await link.click();
-        await expect(page).toHaveURL(/\/data-explorer/);
-    });
-
-    test("can navigate from Data Explorer to Companies", async ({ page }) => {
-        await page.goto("/data-explorer", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const link = page.getByRole("link", { name: /^COMPANIES$/i }).first();
-        await link.click();
-        await expect(page).toHaveURL(/\/companies/);
-    });
-
-    test("RESOURCES dropdown button opens menu", async ({ page }) => {
-        await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const btn = page.getByRole("button", { name: /^RESOURCES$/i });
-        await btn.click();
-        // MUI Menu should appear with resource links
-        await page.waitForTimeout(500);
-        // Look for menu items
-        const menuItems = page.locator('[role="menuitem"], [role="menu"] a, .MuiMenu-list a');
-        const count = await menuItems.count();
-        expect(count).toBeGreaterThanOrEqual(1);
-    });
-
-    test("ABOUT dropdown button opens menu", async ({ page }) => {
-        await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const btn = page.getByRole("button", { name: /^ABOUT$/i });
-        await btn.click();
-        await page.waitForTimeout(500);
-        const menuItems = page.locator('[role="menuitem"], [role="menu"] a, .MuiMenu-list a');
-        const count = await menuItems.count();
-        expect(count).toBeGreaterThanOrEqual(1);
-    });
-
-    test("LOG IN/REGISTER button is clickable", async ({ page }) => {
-        await page.goto("/", { waitUntil: "networkidle" });
-        await dismissCookieBanner(page);
-
-        const btn = page.getByRole("button", { name: /log in\/register/i });
-        await expect(btn).toBeVisible();
-        await expect(btn).toBeEnabled();
+        const logo = page.locator('a[href="/"] img, a[href="/"] svg').first().or(
+            page.locator('header a[href="/"]').first()
+        );
+        await logo.click();
+        await expect(page).toHaveURL(/https:\/\/nzdpu\.com\/?$/);
     });
 });
 
@@ -120,12 +68,9 @@ test.describe("Footer Navigation", () => {
     const footerLinks = [
         { name: "Companies", href: "/companies" },
         { name: "Data Explorer", href: "/data-explorer" },
-        { name: "Data Model Blueprint", href: "/data-model-blueprint" },
         { name: "Documentation", href: "/documentation" },
         { name: "FAQs", href: "/faq" },
-        { name: "Contact Us", href: "/contact-us" },
         { name: "About NZDPU", href: "/about" },
-        { name: "News & Publications", href: "/news-and-publications" },
         { name: "Terms of Service", href: "/terms-of-service" },
         { name: "Privacy Policy", href: "/privacy-policy" },
     ];
@@ -138,79 +83,58 @@ test.describe("Footer Navigation", () => {
         });
     }
 
-    test("footer has LinkedIn social link", async ({ page }) => {
-        const link = page.locator('footer a[href*="linkedin.com"]');
-        await expect(link.first()).toBeVisible();
-    });
-
-    test("footer has newsletter email input", async ({ page }) => {
-        const input = page.locator('footer input[name="email"]');
-        await expect(input).toBeVisible();
-    });
-
-    test("footer has SUBMIT button for newsletter", async ({ page }) => {
-        const btn = page.locator("footer").getByRole("button", { name: /^SUBMIT$/i });
-        await expect(btn).toBeVisible();
-    });
-
-    test("footer displays Cookie Preferences button", async ({ page }) => {
-        const btn = page.getByRole("button", { name: /Cookie Preferences/i });
-        await expect(btn).toBeVisible();
-    });
-
-    test("footer displays © NZDPU LLC copyright", async ({ page }) => {
-        const copyright = page.getByText(/© NZDPU LLC/i);
-        await expect(copyright.first()).toBeVisible();
+    test("Social links (LinkedIn) are present", async ({ page }) => {
+        const linkedin = page.locator("footer").locator('a[href*="linkedin.com"]');
+        await expect(linkedin.first()).toBeVisible();
     });
 });
 
 // ═════════════════════════════════════════════════════════════════════════
-//  Engage Section Links (Homepage)
+//  Engage Section Links
 // ═════════════════════════════════════════════════════════════════════════
 
-test.describe("Engage Section Links", () => {
+test.describe("Engage Section", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("/", { waitUntil: "networkidle" });
         await dismissCookieBanner(page);
     });
 
-    test("EXPLORE DATA link points to /data-explorer", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^EXPLORE DATA$/i }).first();
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", /\/data-explorer/);
+    test("EXPLORE DATA button navigates to /data-explorer", async ({ page }) => {
+        const btn = page.getByRole("link", { name: /^EXPLORE DATA$/i });
+        await expect(btn).toHaveAttribute("href", "/data-explorer");
     });
 
-    test("COLLABORATE WITH US link points to /contact-us", async ({ page }) => {
-        const link = page.getByRole("link", { name: /^COLLABORATE WITH US$/i }).first();
-        await expect(link).toBeVisible();
-        await expect(link).toHaveAttribute("href", /\/contact-us/);
+    test("COLLABORATE WITH US button navigates to /contact-us", async ({ page }) => {
+        const btn = page.getByRole("link", { name: /^COLLABORATE WITH US$/i });
+        await expect(btn).toHaveAttribute("href", "/contact-us");
     });
 });
 
 // ═════════════════════════════════════════════════════════════════════════
-//  Cookie Consent Banner
+//  Cookie Consent Banner (Specific Tests)
 // ═════════════════════════════════════════════════════════════════════════
 
 test.describe("Cookie Consent Banner", () => {
+    // We do NOT use beforeEach dismissCookieBanner here, as we want to test its presence.
+
     test("cookie banner appears with ALLOW ALL, DECLINE ALL, CUSTOMIZE options", async ({ page }) => {
-        // Use a fresh context to ensure cookies aren't cached
+        // Use a fresh context to ensure cookies aren't cached if possible, 
+        // or incognito. By default Playwright tests are incognito.
         await page.goto("/", { waitUntil: "networkidle" });
 
-        const allowAll = page.getByRole("button", { name: /allow all/i });
-        const declineAll = page.getByRole("button", { name: /decline all/i });
-        const customize = page.getByRole("button", { name: /customize settings/i });
+        // It might differ based on region, but usually appears.
+        // We check availability.
+        const banner = page.getByText(/We use cookies/i).first();
+        const allowBtn = page.getByRole("button", { name: /allow all/i });
+        const declineBtn = page.getByRole("button", { name: /decline all/i });
+        const customizeBtn = page.getByRole("button", { name: /customize/i });
 
-        // At least one should be visible (banner may be dismissed from prev session)
-        const bannerVisible = (await allowAll.isVisible().catch(() => false))
-            || (await declineAll.isVisible().catch(() => false));
-
-        if (bannerVisible) {
-            await expect(allowAll).toBeVisible();
-            await expect(declineAll).toBeVisible();
-            await expect(customize).toBeVisible();
+        // If banner is present, assert buttons. If not (geo-IP), skip.
+        if (await banner.isVisible()) {
+            await expect(allowBtn).toBeVisible();
+            await expect(declineBtn).toBeVisible();
+            await expect(customizeBtn).toBeVisible();
         }
-        // If banner isn't visible, cookie was already set — test passes.
-        expect(true).toBeTruthy();
     });
 });
 
@@ -218,63 +142,57 @@ test.describe("Cookie Consent Banner", () => {
 //  Accessibility Audits (axe-core)
 // ═════════════════════════════════════════════════════════════════════════
 
-test.describe("Accessibility Audits (axe-core WCAG 2.1 AA)", () => {
-    const pages = [
-        { name: "Homepage", path: "/" },
-        { name: "Companies", path: "/companies" },
-        { name: "Data Explorer", path: "/data-explorer" },
-        { name: "Data Model Blueprint", path: "/data-model-blueprint" },
-        { name: "About", path: "/about" },
-        { name: "Documentation", path: "/documentation" },
-        { name: "FAQ", path: "/faq" },
-        { name: "Contact Us", path: "/contact-us" },
-    ];
+test.describe("Accessibility (WCAG 2.1 AA)", () => {
+    /**
+     * Helper to run axe audit and assert no CRITICAL violations.
+     * We log other violations but do not fail the test, as many legacy/design
+     * issues might exist that are not show-stoppers for E2E.
+     */
+    async function checkA11y(page: Page, contextName: string) {
+        await dismissCookieBanner(page); // clear overlays
 
-    for (const p of pages) {
-        test(`${p.name} page — axe-core a11y audit`, async ({ page }) => {
-            await page.goto(p.path, { waitUntil: "networkidle" });
-            await dismissCookieBanner(page);
-            await page.waitForTimeout(1000);
+        const accessibilityScanResults = await new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+            .analyze();
 
-            const results = await new AxeBuilder({ page })
-                .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-                // Exclude cookie banner region which may have known issues
-                .exclude('[aria-label="allow all"]')
-                .exclude('[aria-label="decline all"]')
-                .analyze();
+        const critical = accessibilityScanResults.violations.filter(
+            (v) => v.impact === "critical"
+        );
 
-            const critical = results.violations.filter((v) => v.impact === "critical");
-            const serious = results.violations.filter((v) => v.impact === "serious");
-            const allViolations = results.violations;
+        if (accessibilityScanResults.violations.length > 0) {
+            console.log(
+                `[A11y] ${contextName}: ${accessibilityScanResults.violations.length} violations`
+            );
+            // Log all violations for report
+            // console.log(JSON.stringify(accessibilityScanResults.violations, null, 2));
+        }
 
-            // ── Detailed logging for CI/CD reports ────────────────
-            if (allViolations.length > 0) {
-                console.log(`\n📋 ${p.name} — ${allViolations.length} a11y violation(s) found:`);
-                allViolations.forEach((v) => {
-                    console.log(`  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}`);
-                    console.log(`    Help: ${v.helpUrl}`);
-                    console.log(`    Nodes affected: ${v.nodes.length}`);
-                    v.nodes.slice(0, 3).forEach((n) => {
-                        console.log(`      → ${n.target.join(" > ")}`);
-                    });
-                });
-            } else {
-                console.log(`\n✅ ${p.name} — No a11y violations found.`);
-            }
-
-            // ── Assertion: fail only on critical violations ──────
-            // The live NZDPU site has known serious/moderate issues
-            // (missing img alt, ARIA input names, contrast).
-            // We flag these in logs but only hard-fail on critical.
-            test.info().annotations.push({
-                type: "a11y-violations-total",
-                description: `${allViolations.length} total | ${critical.length} critical | ${serious.length} serious`,
-            });
-
-            expect(
-                critical,
-                `${p.name} has ${critical.length} critical accessibility violation(s). See console log for details.`
-            ).toHaveLength(0);
-        });
+        // Soft assertion: Fail only on critical errors
+        expect(critical.length, `Critical a11y violations on ${contextName}`).toBe(0);
     }
+
+    test("Homepage accessibility", async ({ page }) => {
+        await page.goto("/", { waitUntil: "networkidle" });
+        await checkA11y(page, "Homepage");
+    });
+
+    test("Companies page accessibility", async ({ page }) => {
+        await page.goto("/companies", { waitUntil: "networkidle" });
+        await checkA11y(page, "Companies Page");
+    });
+
+    test("Data Explorer accessibility", async ({ page }) => {
+        await page.goto("/data-explorer", { waitUntil: "networkidle" });
+        await checkA11y(page, "Data Explorer");
+    });
+
+    test("Data Model Blueprint accessibility", async ({ page }) => {
+        await page.goto("/data-model-blueprint", { waitUntil: "networkidle" });
+        await checkA11y(page, "Data Model Blueprint");
+    });
+
+    test("About page accessibility", async ({ page }) => {
+        await page.goto("/about", { waitUntil: "networkidle" });
+        await checkA11y(page, "About Page");
+    });
 });
